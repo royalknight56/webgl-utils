@@ -4,12 +4,12 @@
  * @Author: RoyalKnight
  * @Date: 2020-11-29 11:11:40
  * @LastEditors: RoyalKnight
- * @LastEditTime: 2021-02-01 11:49:36
+ * @LastEditTime: 2021-02-12 17:57:52
  */
 export {
     init,//初始化
+    initContext,
     downloadShader,//下载着色器文件
-    downloadImage,//下载图片文件
     bindBuffer,//绑定数据到缓冲区
     bufferToData,//缓冲区中数据指向变量
     transferUniformData,//传输uniform变量值
@@ -21,7 +21,53 @@ export {
 }
 
 
+function initContext(id) {
+    var canvas = null;
+    if(typeof id=='string'){
+        console.log('string')
+        canvas = document.getElementById(id);//获取canvas上下文
+    }else{
+        if(id instanceof HTMLCanvasElement){
+            canvas = id
+        }
+    }
 
+    /**
+     * @name: 以下是getWebGLContext简写的内容
+     * @param {*}canvas
+     * @return {*}
+     * @Date: 2020-11-28 10:16:57
+     * @LastEditors: RoyalKnight
+     */
+
+    //create3DContext
+    var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    var context = null;
+    for (var ii = 0; ii < names.length; ++ii) {
+        try {
+            context = canvas.getContext(names[ii]);
+        } catch (e) { }
+        if (context) {
+            break;
+        }
+    }
+    //setupWebGL
+    if (!context) {
+        if (!window.WebGLRenderingContext) {
+            console.log('Error1')
+        } else {
+            console.log('Error2')
+        }
+    }
+    //getWebGLContext
+    if (!context) {
+        console.log('Failed to get the rendering context for WebGL');
+        return;
+    } else {
+
+    }
+    return  context
+}
 /**
 * @name: 初始化函数
 * @param {String} vshader 顶点着色器
@@ -32,7 +78,15 @@ export {
 */
 
 function init(id, vshader, fshader) {
-    var canvas = document.getElementById(id);//获取canvas上下文
+    var canvas = null;
+    if(typeof id=='string'){
+        console.log('string')
+        canvas = document.getElementById(id);//获取canvas上下文
+    }else{
+        if(id instanceof HTMLCanvasElement){
+            canvas = id
+        }
+    }
 
     /**
      * @name: 以下是getWebGLContext简写的内容
@@ -185,29 +239,7 @@ function downloadShader(src) {
     req.send();
     return pro;
 }
-/**
- * @name: 下载图片文件
- * @param {*} src
- * @return {*}
- * @Date: 2020-11-29 12:21:53
- * @LastEditors: RoyalKnight
- */
-function downloadImage(src) {
-    return new Promise((res, rej) => {
-        var image = new Image();  // Create the image object
-        if (!image) {
-            console.log('Failed to create the image object');
-            rej()
-            // return false;
-        }
-        // Register the event handler to be called on loading an image
-        image.onload = function () {
-            res(image);
-        };
-        // Tell the browser to load an image
-        image.src = src;
-    })
-}
+
 
 /**
  * @name: 绑定数据到缓冲区
@@ -245,6 +277,7 @@ function bindBuffer(gl, arrayData, opt) {
  * @LastEditors: RoyalKnight
  */
 function bufferToData(gl, opt) {
+    
     // var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
     var FSIZE = 4;
     //Get the storage location of a_Position, assign and enable buffer
@@ -257,6 +290,19 @@ function bufferToData(gl, opt) {
     gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
 }
 
+function bufferToProgramData(gl, opt) {
+
+    // var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+    var FSIZE = 4;
+    //Get the storage location of a_Position, assign and enable buffer
+    var a_Position = gl.getAttribLocation(gl.program, opt.name);
+    if (a_Position < 0) {
+        console.log('Failed to get the storage location of ' + opt.name);
+        return -1;
+    }
+    gl.vertexAttribPointer(a_Position, opt.length, gl[opt.type], false, FSIZE * opt.stride, FSIZE * opt.offset);
+    gl.enableVertexAttribArray(a_Position);  // Enable the assignment of the buffer object
+}
 
 /**
  * @name: 传输uniform数据
@@ -302,10 +348,16 @@ function initTextures(gl, image, area) {
     // Set the texture parameters
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+    
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+
 
     // Set the texture image
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+    // gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        
 }
 
 function getGLImageData(gl, x, y, w, h) {
