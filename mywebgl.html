@@ -4,7 +4,7 @@
  * @Author: RoyalKnight
  * @Date: 2020-11-28 10:06:26
  * @LastEditors: RoyalKnight
- * @LastEditTime: 2021-02-03 19:49:50
+ * @LastEditTime: 2021-04-19 12:21:50
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -14,12 +14,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
-
+<style>
+    .glcan{
+        transform:rotateX(180deg)
+    }
+    #webgl{
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1;
+    }
+    #datagl{
+        position: absolute;
+        left: 256px;
+        top: 0;
+    }
+    #showgl{
+        position: absolute;
+        top: 256px;
+    }
+</style>
 <body>
-    <canvas id="webgl" width="500" height="500">
+    <canvas id="webgl" class="glcan" width="256" height="256">
         Please use a browser that supports "canvas"
     </canvas>
-    <canvas id="datagl" width="500" height="500">
+    <canvas id="datagl" class="glcan" width="256" height="256">
+        Please use a browser that supports "canvas"
+    </canvas>
+    <canvas id="showgl" class="glcan2" width="500" height="500">
         Please use a browser that supports "canvas"
     </canvas>
 </body>

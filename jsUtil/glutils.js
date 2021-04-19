@@ -4,16 +4,17 @@
  * @Author: RoyalKnight
  * @Date: 2020-11-29 11:11:40
  * @LastEditors: RoyalKnight
- * @LastEditTime: 2021-02-12 17:57:52
+ * @LastEditTime: 2021-04-19 14:32:18
  */
 export {
     init,//初始化
     initContext,
-    downloadShader,//下载着色器文件
+    createBuffer,//创建缓冲区
     bindBuffer,//绑定数据到缓冲区
     bufferToData,//缓冲区中数据指向变量
     transferUniformData,//传输uniform变量值
     initTextures,//初始化纹理
+    texImage2D,//赋予纹理
 
     getGLImageData,//获取图片数据
     putGLImageData
@@ -45,7 +46,7 @@ function initContext(id) {
     var context = null;
     for (var ii = 0; ii < names.length; ++ii) {
         try {
-            context = canvas.getContext(names[ii]);
+            context = canvas.getContext(names[ii],{preserveDrawingBuffer: true});
         } catch (e) { }
         if (context) {
             break;
@@ -217,29 +218,16 @@ function init(id, vshader, fshader) {
 
 }
 
-/**
- * @name: 下载着色器文件
- * @param {*} src
- * @return {*}
- * @Date: 2020-11-29 12:21:53
- * @LastEditors: RoyalKnight
- */
-function downloadShader(src) {
-    let resacc = null;
-    let pro = new Promise((res, rej) => {
-        resacc = res;
-    })
-    let req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        if (req.readyState === 4 && req.status !== 404) {
-            resacc(req.responseText)
-        }
-    }
-    req.open('GET', src, true);
-    req.send();
-    return pro;
-}
 
+function createBuffer(gl, area){
+    var vertexTexCoordBuffer = gl.createBuffer();
+    if (!vertexTexCoordBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+    // gl.bindBuffer(gl[area], vertexTexCoordBuffer);
+    return vertexTexCoordBuffer
+}
 
 /**
  * @name: 绑定数据到缓冲区
@@ -251,18 +239,13 @@ function downloadShader(src) {
  * @LastEditors: RoyalKnight
  */
 
-function bindBuffer(gl, arrayData, opt) {
+function bindBuffer(gl, arrayData, opt,buffer) {
 
     arrayData = new Float32Array(arrayData)
     // Create the buffer object
-    var vertexTexCoordBuffer = gl.createBuffer();
-    if (!vertexTexCoordBuffer) {
-        console.log('Failed to create the buffer object');
-        return -1;
-    }
-
+    // let buffer = createBuffer(gl, arrayData, opt)
     // Bind the buffer object to target
-    gl.bindBuffer(gl[opt.area], vertexTexCoordBuffer);
+    gl.bindBuffer(gl[opt.area], buffer);
     gl.bufferData(gl[opt.area], arrayData, gl.STATIC_DRAW);
 
 }
@@ -276,12 +259,13 @@ function bindBuffer(gl, arrayData, opt) {
  * @Date: 2020-11-29 14:13:35
  * @LastEditors: RoyalKnight
  */
-function bufferToData(gl, opt) {
+function bufferToData(pro, opt) {
     
+    let gl =pro.gl
     // var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
     var FSIZE = 4;
     //Get the storage location of a_Position, assign and enable buffer
-    var a_Position = gl.getAttribLocation(gl.program, opt.name);
+    var a_Position = gl.getAttribLocation(pro.program, opt.name);
     if (a_Position < 0) {
         console.log('Failed to get the storage location of ' + opt.name);
         return -1;
@@ -314,8 +298,9 @@ function bufferToProgramData(gl, opt) {
  * @Date: 2020-11-29 14:14:49
  * @LastEditors: RoyalKnight
  */
-function transferUniformData(gl, name, type, ...value) {
-    var u_RGB_color = gl.getUniformLocation(gl.program, name);
+function transferUniformData(pro, name, type, ...value) {
+    let gl = pro.gl
+    var u_RGB_color = gl.getUniformLocation(pro.program, name);
     if (u_RGB_color < 0) {
         console.log('Failed to get the storage location of ' + name);
         return -1;
@@ -332,14 +317,14 @@ function transferUniformData(gl, name, type, ...value) {
  * @Date: 2020-11-29 14:26:50
  * @LastEditors: RoyalKnight
  */
-function initTextures(gl, image, area) {
+function initTextures(gl, area) {
     var texture = gl.createTexture();   // Create a texture object
     if (!texture) {
         console.log('Failed to create the texture object');
         return false;
     }
 
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); //翻转y轴 Flip the image's y axis
+    // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); //翻转y轴 Flip the image's y axis
     // Enable texture unit0
     gl.activeTexture(gl['TEXTURE' + area]);
     // Bind the texture object to the target
@@ -355,11 +340,21 @@ function initTextures(gl, image, area) {
 
 
     // Set the texture image
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
     // gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
         
 }
-
+/**
+ * @name: 赋予纹理
+ * @param {*} gl
+ * @param {*} image
+ * @return {*}
+ * @Date: 2021-04-19 09:20:42
+ * @LastEditors: RoyalKnight
+ */
+function texImage2D(gl,image){
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+}
 function getGLImageData(gl, x, y, w, h) {
     // let ele =document.getElementById(id)
     const pixels = new Uint8Array(w * h * 4);

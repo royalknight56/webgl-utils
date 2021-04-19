@@ -4,105 +4,85 @@
  * @Author: RoyalKnight
  * @Date: 2020-11-28 10:07:43
  * @LastEditors: RoyalKnight
- * @LastEditTime: 2021-02-12 17:58:09
+ * @LastEditTime: 2021-04-19 14:40:01
  */
-import {
-    init,//初始化
-    initContext,
-    downloadShader,//下载着色器文件
-    bindBuffer,//绑定数据到缓冲区
-    bufferToData,//缓冲区中数据指向变量
-    transferUniformData,//传输uniform变量值
-    initTextures,//初始化纹理
-    getGLImageData,//获取图片数据
-    putGLImageData,
-} from './jsUtil/glutils.js'
 
 import {
-    drawImgTo,
-    downloadImage,//下载图片文件
-    changeImageSize,
-    changeImageContrast
-} from './jsUtil/imgUtils.js'
-import { perFrame } from './jsUtil/animationUtil.js';
-import { Program } from './jsUtil/lib/program.js'
-import { compileShader } from './jsUtil/lib/shader.js'
-import {
-    changeGlContrast,
-    changeGlBrightness,
-    changeGlSaturation,
-    changeGlChannel,
-    initImg
-} from './jsUtil/glImgUtils.js'
-import { initProgramImg } from './jsUtil/pro/proImgUtils.js';
+    downloadImage,
+    changeImageSize
+} from './jsUtil/file/file_utils.js'
+
+import { Program } from './jsUtil/program.js'
+
 main()
 async function main() {
 
-    let VSHADER_SOURCE = await downloadShader('./glslUtil/poin.glsl');
-    let FSHADER_SOURCE = await downloadShader('./glslUtil/farg.glsl');
+    let pro = new Program('webgl')
 
-    // let gl = init('webgl', VSHADER_SOURCE, FSHADER_SOURCE);
+    let datapro = new Program('datagl')
 
-    let gl = initContext('webgl')
-    let pro = new Program(
-        gl,
-        compileShader(gl, gl.VERTEX_SHADER, VSHADER_SOURCE),
-        compileShader(gl, gl.FRAGMENT_SHADER, FSHADER_SOURCE)
-    )
-    pro.bind()
+
     let image2 = await downloadImage('./resources/sky.JPG');
     let image3 = await downloadImage('./resources/brid.jpg');
 
+
     let finimage = await changeImageSize(image3, 256 * 256, 256 * 256)
 
-    console.log(gl instanceof WebGLRenderingContext)
-    console.log(pro)
+    pro.initProgramImg(finimage)
+    datapro.initProgramImg(finimage)
 
-    initProgramImg(pro, finimage)
-    // initImg(gl, finimage)
-    // let image = await downloadImage('./resources/quzao2_after.jpg');
-    // let image2 = await downloadImage('./resources/sky.JPG');
+    pro.draw()
+    datapro.draw()
+
+    document.getElementById('webgl').addEventListener('mousemove', async(e) => {
+        let posoffx = -1 + e.offsetX / 124
+        let posoffy = -1 - e.offsetY / 124
+        pro.changeGlImgPos(posoffx, posoffy)
+        pro.draw()
 
 
-    // let sx = 1;
-    // let sy = 1;
-    // drawImgTo('webgl', finimage, -1, -1, 1, 1, sx, sy);
+        let imgda1 = pro.getImgData()
+        let imgda2 = datapro.getImgData()
+        var d2ctx = document.getElementById('showgl').getContext('2d');
+        
+        let i1=await createImageBitmap(imgda1)
+        let i2=await createImageBitmap(imgda2)
+        d2ctx.drawImage(i2,0,0)
+        d2ctx.drawImage(i1,0,0)
+    })
 
-    // let ox = -1;
-    // let oy = -1;
+    document.addEventListener('click', (e) => {
+        let imgda = pro.getImgData()
+        datapro.putImgData(imgda)
+        datapro.draw()
+    })
+    document.addEventListener("keydown", async (e) => {
+        let imgda1 = pro.getImgData()
+        let imgda2 = datapro.getImgData()
+        var d2ctx = document.getElementById('showgl').getContext('2d');
+        
+        let i1=await createImageBitmap(imgda1)
+        let i2=await createImageBitmap(imgda2)
+        d2ctx.drawImage(i1,0,0)
+        d2ctx.drawImage(i2,0,0)
+    })
 
-    // let oxoff = 0.01;
-    // let oyoff = -0.02
 
-    let contra = 0.21;
 
-    // // drawImgTo('datagl', finimage, ox, oy, 1, 1, sx, sy);
-    // finimage = await  changeImageContrast(finimage, 0.2)
-
-    // // console.log(finimage)
-    // // document.body.appendChild(finimage)
-    // drawImgTo('datagl', finimage, ox, oy, 1, 1, sx, sy);
-    // changeGlSaturation(gl, 0.1)
-
-    // changeGlChannel(gl,4);
-    let i = 0;
+    let sw = true
     setInterval(() => {
-        i++;
-        i %= 5
-        contra += 0.001
-        contra %= 2
-        changeGlChannel(gl, i);
 
-        changeGlBrightness(gl, contra)
+        if (sw) {
+            pro.changeProgramImg(image2)
+        } else {
+            pro.changeProgramImg(finimage)
+        }
+
+        sw = !sw
+        pro.draw()
 
     }, 1000)
-    // perFrame(async () => {
-    //     contra += 0.001
-    //     contra %= 2
-    //     // changeGlContrast(gl, contra)
-    //     // changeGlBrightness(gl, contra)
-    //     changeGlSaturation(gl, contra)
-    // })
+
 }
 
 
