@@ -4,7 +4,7 @@
  * @Author: RoyalKnight
  * @Date: 2021-02-01 15:45:07
  * @LastEditors: RoyalKnight
- * @LastEditTime: 2021-04-23 16:19:54
+ * @LastEditTime: 2021-04-24 23:02:15
 -->
 
 # webgl-utils
@@ -35,6 +35,13 @@ Program(glid, gl);
 
 ```js
 
+
+    /**
+     * @name: 执行此行代码会执行相应程序的绘制工作
+     * @param {*}
+     * @return {*}
+     * @LastEditors: RoyalKnight
+     */
     draw() {}
 
     /**
